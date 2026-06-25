@@ -15,6 +15,7 @@ const state = {
 };
 const MAX_RAILWAY_HOUR = 29;
 const DIAGRAM_COLORS = ['#1a4e8a', '#dd6b20', '#2f855a', '#b83280', '#805ad5'];
+const INVALID_FILENAME_CHARS = /[\\/:*?"<>|]/g;
 
 const els = {
   railwayName: document.getElementById('railwayName'),
@@ -190,7 +191,7 @@ function refreshDiagram() {
         const x = left + ((point.minute - minTime) / span) * (width - left - right);
         const y = top + stationNames.indexOf(point.station) * yStep;
         const isFinitePoint = Number.isFinite(x) && Number.isFinite(y);
-        const isInDiagramBounds = x >= left && x <= width - right && y >= top && y <= height - bottom;
+        const isInDiagramBounds = x >= left && y >= top;
         if (!isFinitePoint || !isInDiagramBounds) return null;
         return `${x},${y}`;
       })
@@ -272,6 +273,11 @@ function renderAll() {
   refreshDiagram();
 }
 
+function sanitizeFilename(name) {
+  const sanitized = (name || '').replace(INVALID_FILENAME_CHARS, '_').trim();
+  return sanitized || 'diagram';
+}
+
 document.getElementById('addTrainType').addEventListener('click', () => {
   state.railway.trainTypes.push({ name: '', code: '', category: '' });
   renderAll();
@@ -313,7 +319,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
   link.href = url;
-  link.download = `${state.railway.name || 'diagram'}.oud2`;
+  link.download = `${sanitizeFilename(state.railway.name)}.oud2`;
   link.click();
   URL.revokeObjectURL(url);
 });
