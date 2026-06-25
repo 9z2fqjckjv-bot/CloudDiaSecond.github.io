@@ -13,6 +13,8 @@ const state = {
     { trainNo: '101', type: '普通', station: 'B駅', arrive: '08:10', depart: '' },
   ],
 };
+const MAX_RAILWAY_HOUR = 29;
+const DIAGRAM_COLORS = ['#1a4e8a', '#dd6b20', '#2f855a', '#b83280', '#805ad5'];
 
 const els = {
   railwayName: document.getElementById('railwayName'),
@@ -140,7 +142,7 @@ function toMinutes(value) {
   if (!/^\d{1,2}:\d{2}$/.test(value || '')) return null;
   const [h, m] = value.split(':').map(Number);
   // 鉄道ダイヤでは日跨ぎ運転を想定し 29:59 までを許容
-  if (h < 0 || h > 29 || m < 0 || m >= 60) return null;
+  if (h < 0 || h > MAX_RAILWAY_HOUR || m < 0 || m >= 60) return null;
   return h * 60 + m;
 }
 
@@ -180,15 +182,16 @@ function refreshDiagram() {
   });
 
   let colorIndex = 0;
-  const palette = ['#1a4e8a', '#dd6b20', '#2f855a', '#b83280', '#805ad5'];
   lines.forEach((points, trainNo) => {
-    const color = palette[colorIndex % palette.length];
+    const color = DIAGRAM_COLORS[colorIndex % DIAGRAM_COLORS.length];
     colorIndex += 1;
     const polyline = points
       .map(point => {
         const x = left + ((point.minute - minTime) / span) * (width - left - right);
         const y = top + stationNames.indexOf(point.station) * yStep;
-        if (!Number.isFinite(x) || !Number.isFinite(y) || x < left || x > width - right || y < top || y > height - bottom) return null;
+        const isFinitePoint = Number.isFinite(x) && Number.isFinite(y);
+        const isInDiagramBounds = x >= left && x <= width - right && y >= top && y <= height - bottom;
+        if (!isFinitePoint || !isInDiagramBounds) return null;
         return `${x},${y}`;
       })
       .filter(Boolean)
@@ -216,7 +219,7 @@ function serializeOud2(data) {
 
 function parseOud2(text) {
   const trimmed = text.trim();
-  if (!trimmed) throw new Error('Input text is empty. Please provide valid .oud2 content or select a file.');
+  if (!trimmed) throw new Error('入力テキストが空です。.oud2内容を入力するかファイルを選択してください。');
 
   if (trimmed.startsWith('{')) {
     const parsed = JSON.parse(trimmed);
