@@ -50,15 +50,25 @@ function renderRailway() {
   els.railwayName.value = state.railway.name;
   els.railwayNumber.value = state.railway.number;
   els.trainTypesTable.textContent = '';
-  state.railway.trainTypes.forEach((type, idx) => {
-    const currentIndex = idx;
+  state.railway.trainTypes.forEach(type => {
+    const findIndex = () => state.railway.trainTypes.indexOf(type);
     const tr = document.createElement('tr');
-    tr.append(inputCell(type.name, value => (state.railway.trainTypes[currentIndex].name = value)));
-    tr.append(inputCell(type.code, value => (state.railway.trainTypes[currentIndex].code = value)));
-    tr.append(inputCell(type.category, value => (state.railway.trainTypes[currentIndex].category = value)));
+    tr.append(inputCell(type.name, value => {
+      const index = findIndex();
+      if (index >= 0) state.railway.trainTypes[index].name = value;
+    }));
+    tr.append(inputCell(type.code, value => {
+      const index = findIndex();
+      if (index >= 0) state.railway.trainTypes[index].code = value;
+    }));
+    tr.append(inputCell(type.category, value => {
+      const index = findIndex();
+      if (index >= 0) state.railway.trainTypes[index].category = value;
+    }));
     const td = document.createElement('td');
     td.append(removeRowButton(() => {
-      state.railway.trainTypes.splice(currentIndex, 1);
+      const index = findIndex();
+      if (index >= 0) state.railway.trainTypes.splice(index, 1);
       renderAll();
     }));
     tr.append(td);
@@ -68,14 +78,21 @@ function renderRailway() {
 
 function renderStations() {
   els.stationsTable.textContent = '';
-  state.stations.forEach((station, idx) => {
-    const currentIndex = idx;
+  state.stations.forEach(station => {
+    const findIndex = () => state.stations.indexOf(station);
     const tr = document.createElement('tr');
-    tr.append(inputCell(station.name, value => (state.stations[currentIndex].name = value)));
-    tr.append(inputCell(station.code, value => (state.stations[currentIndex].code = value)));
+    tr.append(inputCell(station.name, value => {
+      const index = findIndex();
+      if (index >= 0) state.stations[index].name = value;
+    }));
+    tr.append(inputCell(station.code, value => {
+      const index = findIndex();
+      if (index >= 0) state.stations[index].code = value;
+    }));
     const td = document.createElement('td');
     td.append(removeRowButton(() => {
-      state.stations.splice(currentIndex, 1);
+      const index = findIndex();
+      if (index >= 0) state.stations.splice(index, 1);
       renderAll();
     }));
     tr.append(td);
@@ -85,17 +102,33 @@ function renderStations() {
 
 function renderTimetable() {
   els.timetableTable.textContent = '';
-  state.timetable.forEach((row, idx) => {
-    const currentIndex = idx;
+  state.timetable.forEach(row => {
+    const findIndex = () => state.timetable.indexOf(row);
     const tr = document.createElement('tr');
-    tr.append(inputCell(row.trainNo, value => (state.timetable[currentIndex].trainNo = value)));
-    tr.append(inputCell(row.type, value => (state.timetable[currentIndex].type = value)));
-    tr.append(inputCell(row.station, value => (state.timetable[currentIndex].station = value)));
-    tr.append(inputCell(row.arrive, value => (state.timetable[currentIndex].arrive = value)));
-    tr.append(inputCell(row.depart, value => (state.timetable[currentIndex].depart = value)));
+    tr.append(inputCell(row.trainNo, value => {
+      const index = findIndex();
+      if (index >= 0) state.timetable[index].trainNo = value;
+    }));
+    tr.append(inputCell(row.type, value => {
+      const index = findIndex();
+      if (index >= 0) state.timetable[index].type = value;
+    }));
+    tr.append(inputCell(row.station, value => {
+      const index = findIndex();
+      if (index >= 0) state.timetable[index].station = value;
+    }));
+    tr.append(inputCell(row.arrive, value => {
+      const index = findIndex();
+      if (index >= 0) state.timetable[index].arrive = value;
+    }));
+    tr.append(inputCell(row.depart, value => {
+      const index = findIndex();
+      if (index >= 0) state.timetable[index].depart = value;
+    }));
     const td = document.createElement('td');
     td.append(removeRowButton(() => {
-      state.timetable.splice(currentIndex, 1);
+      const index = findIndex();
+      if (index >= 0) state.timetable.splice(index, 1);
       renderAll();
     }));
     tr.append(td);
@@ -277,7 +310,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   link.href = url;
   link.download = `${state.railway.name || 'diagram'}.oud2`;
   link.addEventListener('click', () => {
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   }, { once: true });
   link.click();
 });
