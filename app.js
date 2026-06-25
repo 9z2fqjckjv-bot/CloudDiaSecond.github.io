@@ -17,6 +17,7 @@ const MAX_RAILWAY_HOUR = 29;
 const DIAGRAM_COLORS = ['#1a4e8a', '#dd6b20', '#2f855a', '#b83280', '#805ad5'];
 const INVALID_FILENAME_CHARS = /[\\/:*?"<>|]/g;
 const TRAIN_OPERATIONS = ['停車', '通過', '運行なし'];
+const DEFAULT_TRAIN_OPERATION = '停車';
 
 const els = {
   railwayName: document.getElementById('railwayName'),
@@ -185,7 +186,10 @@ function refreshDiagram() {
   const yStep = stationNames.length > 1 ? (height - top - bottom) / (stationNames.length - 1) : 0;
 
   const entries = state.timetable
-    .map(row => ({ ...row, minute: toMinutes(row.depart || row.arrive), operation: TRAIN_OPERATIONS.includes(row.operation) ? row.operation : '停車' }))
+    .map(row => {
+      const normalized = normalizeTimetableRow(row);
+      return { ...normalized, minute: toMinutes(normalized.depart || normalized.arrive) };
+    })
     .filter(row => row.operation !== '運行なし')
     .filter(row => row.trainNo && row.station && row.minute !== null)
     .sort((a, b) => a.minute - b.minute);
@@ -255,7 +259,7 @@ function normalizeStation(station = {}) {
 }
 
 function normalizeTimetableRow(row = {}) {
-  const operation = TRAIN_OPERATIONS.includes(row.operation) ? row.operation : '停車';
+  const operation = TRAIN_OPERATIONS.includes(row.operation) ? row.operation : DEFAULT_TRAIN_OPERATION;
   return {
     trainNo: row.trainNo ?? '',
     type: row.type ?? '',
@@ -322,9 +326,9 @@ function parseOud2(text) {
       if (name || code || category) next.railway.trainTypes.push({ name, code, category });
     } else if (section === 'Stations') {
       const [name = '', code = '', track = ''] = line.split('|');
-      if (name || code || track) next.stations.push({ name, code, track });
+      if (name || code) next.stations.push({ name, code, track });
     } else if (section === 'Timetable') {
-      const [trainNo = '', type = '', station = '', arrive = '', depart = '', operation = '停車'] = line.split('|');
+      const [trainNo = '', type = '', station = '', arrive = '', depart = '', operation = DEFAULT_TRAIN_OPERATION] = line.split('|');
       if (trainNo || station) next.timetable.push({ trainNo, type, station, arrive, depart, operation });
     }
   });
@@ -355,7 +359,7 @@ document.getElementById('addStation').addEventListener('click', () => {
 });
 
 document.getElementById('addTimetable').addEventListener('click', () => {
-  state.timetable.push({ trainNo: '', type: '', station: '', arrive: '', depart: '', operation: '停車' });
+  state.timetable.push({ trainNo: '', type: '', station: '', arrive: '', depart: '', operation: DEFAULT_TRAIN_OPERATION });
   renderAll();
 });
 
