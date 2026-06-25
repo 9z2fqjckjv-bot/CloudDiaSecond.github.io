@@ -234,6 +234,10 @@ function syncTrainSettings(trains, stations, settingsSourceMap) {
   });
 }
 
+function clampTrainIndex(index, length) {
+  return Math.min(index, Math.max(0, length - 1));
+}
+
 function normalizeState(inputState = {}) {
   const stations = Array.isArray(inputState.stations) ? inputState.stations.map(normalizeStation) : [];
   const diagrams = Array.isArray(inputState.diagrams) && inputState.diagrams.length
@@ -270,7 +274,7 @@ function normalizeState(inputState = {}) {
   }
 
   const trains = syncTrainSettings(Array.from(trainMap.values()), stations, settingsSourceMap);
-  const selectedTrainIndex = Math.min(inputState.ui?.selectedTrainIndex ?? 0, Math.max(0, trains.length - 1));
+  const selectedTrainIndex = clampTrainIndex(inputState.ui?.selectedTrainIndex ?? 0, trains.length);
 
   return {
     railway: {
@@ -316,9 +320,7 @@ function replaceTrainReferences(previousTrainNo, nextTrainNo) {
 
 function syncStateAfterStationChange() {
   state.trains = syncTrainSettings(state.trains, state.stations, new Map());
-  if (state.ui.selectedTrainIndex >= state.trains.length) {
-    state.ui.selectedTrainIndex = Math.max(0, state.trains.length - 1);
-  }
+  state.ui.selectedTrainIndex = clampTrainIndex(state.ui.selectedTrainIndex, state.trains.length);
 }
 
 function renderRailway() {
@@ -536,7 +538,7 @@ function renderTrainEditor() {
     return;
   }
 
-  state.ui.selectedTrainIndex = Math.min(state.ui.selectedTrainIndex, state.trains.length - 1);
+  state.ui.selectedTrainIndex = clampTrainIndex(state.ui.selectedTrainIndex, state.trains.length);
   const selectedTrain = state.trains[state.ui.selectedTrainIndex];
 
   state.trains.forEach((train, index) => {
@@ -589,7 +591,7 @@ function refreshDiagram() {
   const titleTop = 24;
   const top = 56;
   const bottom = 24;
-  const diagrams = state.diagrams.length ? state.diagrams : [createDefaultDiagram('ダイヤなし')];
+  const diagrams = state.diagrams;
   const totalHeight = diagrams.length * sectionHeight;
   const stationNames = state.stations.map(station => station.name).filter(Boolean);
   const settingsMap = new Map();
@@ -599,6 +601,16 @@ function refreshDiagram() {
       settingsMap.set(`${train.trainNo}::${setting.station}`, setting);
     });
   });
+
+  if (!diagrams.length) {
+    els.diagram.setAttribute('viewBox', `0 0 ${width} ${sectionHeight}`);
+    els.diagram.innerHTML = [
+      `<rect x="0" y="0" width="${width}" height="${sectionHeight}" fill="white"/>`,
+      '<text x="12" y="32" font-size="14" fill="#1d2733">ダイヤがありません。</text>',
+    ].join('');
+    els.rawText.value = serializeOud2(state);
+    return;
+  }
 
   const parts = [`<rect x="0" y="0" width="${width}" height="${totalHeight}" fill="white"/>`];
 
@@ -806,7 +818,7 @@ document.getElementById('removeTrain').addEventListener('click', () => {
       diagram.entries = diagram.entries.filter(entry => entry.trainNo !== removed.trainNo);
     });
   }
-  state.ui.selectedTrainIndex = Math.max(0, Math.min(state.ui.selectedTrainIndex, state.trains.length - 1));
+  state.ui.selectedTrainIndex = clampTrainIndex(state.ui.selectedTrainIndex, state.trains.length);
   renderAll();
 });
 
