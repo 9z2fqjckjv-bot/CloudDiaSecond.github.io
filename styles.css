@@ -37,6 +37,10 @@ main {
   margin-bottom: 8px;
 }
 
+.field-row > * {
+  flex: 1 1 180px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -70,6 +74,38 @@ button {
 
 button.remove {
   background: #a82828;
+}
+
+button.subtle {
+  background: #4a5568;
+}
+
+.diagram-card {
+  border: 1px solid #d6dee8;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #fbfcfe;
+}
+
+.diagram-card h3 {
+  margin: 0 0 8px;
+}
+
+.inline-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.inline-actions button {
+  flex: 0 0 auto;
+}
+
+.empty-state {
+  color: #4a5568;
+  margin-bottom: 8px;
 }
 
 #diagram {
