@@ -51,13 +51,14 @@ function renderRailway() {
   els.railwayNumber.value = state.railway.number;
   els.trainTypesTable.textContent = '';
   state.railway.trainTypes.forEach((type, idx) => {
+    const currentIndex = idx;
     const tr = document.createElement('tr');
-    tr.append(inputCell(type.name, value => (state.railway.trainTypes[idx].name = value)));
-    tr.append(inputCell(type.code, value => (state.railway.trainTypes[idx].code = value)));
-    tr.append(inputCell(type.category, value => (state.railway.trainTypes[idx].category = value)));
+    tr.append(inputCell(type.name, value => (state.railway.trainTypes[currentIndex].name = value)));
+    tr.append(inputCell(type.code, value => (state.railway.trainTypes[currentIndex].code = value)));
+    tr.append(inputCell(type.category, value => (state.railway.trainTypes[currentIndex].category = value)));
     const td = document.createElement('td');
     td.append(removeRowButton(() => {
-      state.railway.trainTypes.splice(idx, 1);
+      state.railway.trainTypes.splice(currentIndex, 1);
       renderAll();
     }));
     tr.append(td);
@@ -68,12 +69,13 @@ function renderRailway() {
 function renderStations() {
   els.stationsTable.textContent = '';
   state.stations.forEach((station, idx) => {
+    const currentIndex = idx;
     const tr = document.createElement('tr');
-    tr.append(inputCell(station.name, value => (state.stations[idx].name = value)));
-    tr.append(inputCell(station.code, value => (state.stations[idx].code = value)));
+    tr.append(inputCell(station.name, value => (state.stations[currentIndex].name = value)));
+    tr.append(inputCell(station.code, value => (state.stations[currentIndex].code = value)));
     const td = document.createElement('td');
     td.append(removeRowButton(() => {
-      state.stations.splice(idx, 1);
+      state.stations.splice(currentIndex, 1);
       renderAll();
     }));
     tr.append(td);
@@ -84,15 +86,16 @@ function renderStations() {
 function renderTimetable() {
   els.timetableTable.textContent = '';
   state.timetable.forEach((row, idx) => {
+    const currentIndex = idx;
     const tr = document.createElement('tr');
-    tr.append(inputCell(row.trainNo, value => (state.timetable[idx].trainNo = value)));
-    tr.append(inputCell(row.type, value => (state.timetable[idx].type = value)));
-    tr.append(inputCell(row.station, value => (state.timetable[idx].station = value)));
-    tr.append(inputCell(row.arrive, value => (state.timetable[idx].arrive = value)));
-    tr.append(inputCell(row.depart, value => (state.timetable[idx].depart = value)));
+    tr.append(inputCell(row.trainNo, value => (state.timetable[currentIndex].trainNo = value)));
+    tr.append(inputCell(row.type, value => (state.timetable[currentIndex].type = value)));
+    tr.append(inputCell(row.station, value => (state.timetable[currentIndex].station = value)));
+    tr.append(inputCell(row.arrive, value => (state.timetable[currentIndex].arrive = value)));
+    tr.append(inputCell(row.depart, value => (state.timetable[currentIndex].depart = value)));
     const td = document.createElement('td');
     td.append(removeRowButton(() => {
-      state.timetable.splice(idx, 1);
+      state.timetable.splice(currentIndex, 1);
       renderAll();
     }));
     tr.append(td);
@@ -103,6 +106,7 @@ function renderTimetable() {
 function toMinutes(value) {
   if (!/^\d{1,2}:\d{2}$/.test(value || '')) return null;
   const [h, m] = value.split(':').map(Number);
+  if (h < 0 || h > 29 || m < 0 || m > 59) return null;
   return h * 60 + m;
 }
 
@@ -268,10 +272,11 @@ document.getElementById('importBtn').addEventListener('click', async () => {
 document.getElementById('exportBtn').addEventListener('click', () => {
   const blob = new Blob([serializeOud2(state)], { type: 'text/plain;charset=utf-8' });
   const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
+  link.href = url;
   link.download = `${state.railway.name || 'diagram'}.oud2`;
   link.click();
-  URL.revokeObjectURL(link.href);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 
 renderAll();
