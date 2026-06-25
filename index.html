@@ -22,7 +22,7 @@
         <h3>種別</h3>
         <table id="trainTypesTable">
           <thead>
-            <tr><th>名称</th><th>略号</th><th>種別</th></tr>
+            <tr><th>名称</th><th>略号</th><th>種別</th><th></th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -33,7 +33,7 @@
         <h2>駅設定</h2>
         <table id="stationsTable">
           <thead>
-            <tr><th>駅名</th><th>駅コード</th><th>番線</th></tr>
+            <tr><th>駅名</th><th>駅コード</th><th>番線</th><th></th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -41,14 +41,30 @@
       </section>
 
       <section class="panel">
-        <h2>駅時刻表</h2>
-        <table id="timetableTable">
+        <h2>ダイヤ表</h2>
+        <div id="diagramsContainer"></div>
+        <button id="addDiagram" type="button">ダイヤを追加</button>
+      </section>
+
+      <section class="panel">
+        <h2>列車設定</h2>
+        <div class="field-row">
+          <label>対象列車
+            <select id="trainSelector"></select>
+          </label>
+          <button id="addTrain" type="button">列車を追加</button>
+          <button id="removeTrain" type="button" class="remove">列車を削除</button>
+        </div>
+        <div class="field-row">
+          <label>列車番号 <input id="trainNoInput" type="text" /></label>
+          <label>種別 <input id="trainTypeInput" type="text" /></label>
+        </div>
+        <table id="trainSettingsTable">
           <thead>
-            <tr><th>列車番号</th><th>種別</th><th>駅名</th><th>着</th><th>発</th><th>運行</th></tr>
+            <tr><th>駅名</th><th>運行</th><th>着番線</th><th>発番線</th><th>備考</th></tr>
           </thead>
           <tbody></tbody>
         </table>
-        <button id="addTimetable" type="button">行を追加</button>
       </section>
 
       <section class="panel">
