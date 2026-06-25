@@ -1,0 +1,80 @@
+:root {
+  color-scheme: light;
+  font-family: sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f5f7fb;
+  color: #1d2733;
+}
+
+header {
+  padding: 16px 24px;
+  background: #1a4e8a;
+  color: #fff;
+}
+
+main {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+th,
+td {
+  border: 1px solid #d6dee8;
+  padding: 4px;
+}
+
+input,
+textarea,
+button,
+select {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+button {
+  width: auto;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: #1a4e8a;
+  color: #fff;
+  cursor: pointer;
+}
+
+button.remove {
+  background: #a82828;
+}
+
+#diagram {
+  width: 100%;
+  height: 360px;
+  border: 1px solid #d6dee8;
+  background: #fff;
+}
