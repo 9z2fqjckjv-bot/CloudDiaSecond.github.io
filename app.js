@@ -154,9 +154,10 @@ function refreshDiagram() {
       .map(point => {
         const x = left + ((point.minute - minTime) / span) * (width - left - right);
         const y = top + stationNames.indexOf(point.station) * yStep;
+        if (!Number.isFinite(x) || !Number.isFinite(y) || y < 0) return null;
         return `${x},${y}`;
       })
-      .filter(v => !v.includes(',-') && !v.endsWith(',NaN'))
+      .filter(Boolean)
       .join(' ');
     if (!polyline) return;
     parts.push(`<polyline points="${polyline}" fill="none" stroke="${color}" stroke-width="2"/>`);
@@ -181,7 +182,7 @@ function serializeOud2(data) {
 
 function parseOud2(text) {
   const trimmed = text.trim();
-  if (!trimmed) return;
+  if (!trimmed) throw new Error('Input text is empty');
 
   if (trimmed.startsWith('{')) {
     const parsed = JSON.parse(trimmed);
@@ -275,8 +276,10 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   const url = URL.createObjectURL(blob);
   link.href = url;
   link.download = `${state.railway.name || 'diagram'}.oud2`;
+  link.addEventListener('click', () => {
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }, { once: true });
   link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 
 renderAll();
