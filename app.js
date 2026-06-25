@@ -5,17 +5,19 @@ const state = {
     trainTypes: [{ name: '普通', code: 'F', category: 'Local' }],
   },
   stations: [
-    { name: 'A駅', code: 'A' },
-    { name: 'B駅', code: 'B' },
+    { name: 'A駅', code: 'A', track: '1' },
+    { name: 'B駅', code: 'B', track: '1' },
   ],
   timetable: [
-    { trainNo: '101', type: '普通', station: 'A駅', arrive: '', depart: '08:00' },
-    { trainNo: '101', type: '普通', station: 'B駅', arrive: '08:10', depart: '' },
+    { trainNo: '101', type: '普通', station: 'A駅', arrive: '', depart: '08:00', operation: '停車' },
+    { trainNo: '101', type: '普通', station: 'B駅', arrive: '08:10', depart: '', operation: '停車' },
   ],
 };
 const MAX_RAILWAY_HOUR = 29;
 const DIAGRAM_COLORS = ['#1a4e8a', '#dd6b20', '#2f855a', '#b83280', '#805ad5'];
 const INVALID_FILENAME_CHARS = /[\\/:*?"<>|]/g;
+const TRAIN_OPERATIONS = ['停車', '通過', '運行なし'];
+const DEFAULT_TRAIN_OPERATION = '停車';
 
 const els = {
   railwayName: document.getElementById('railwayName'),
@@ -46,6 +48,24 @@ function inputCell(value, onInput) {
   });
   const td = document.createElement('td');
   td.append(input);
+  return td;
+}
+
+function selectCell(value, options, onInput) {
+  const select = document.createElement('select');
+  options.forEach(optionValue => {
+    const option = document.createElement('option');
+    option.value = optionValue;
+    option.textContent = optionValue;
+    select.append(option);
+  });
+  select.value = options.includes(value) ? value : options[0];
+  select.addEventListener('input', e => {
+    onInput(e.target.value);
+    refreshDiagram();
+  });
+  const td = document.createElement('td');
+  td.append(select);
   return td;
 }
 
@@ -92,6 +112,10 @@ function renderStations() {
       const index = findIndex();
       if (index >= 0) state.stations[index].code = value;
     }));
+    tr.append(inputCell(station.track, value => {
+      const index = findIndex();
+      if (index >= 0) state.stations[index].track = value;
+    }));
     const td = document.createElement('td');
     td.append(removeRowButton(() => {
       const index = findIndex();
@@ -128,6 +152,10 @@ function renderTimetable() {
       const index = findIndex();
       if (index >= 0) state.timetable[index].depart = value;
     }));
+    tr.append(selectCell(row.operation, TRAIN_OPERATIONS, value => {
+      const index = findIndex();
+      if (index >= 0) state.timetable[index].operation = value;
+    }));
     const td = document.createElement('td');
     td.append(removeRowButton(() => {
       const index = findIndex();
@@ -158,7 +186,11 @@ function refreshDiagram() {
   const yStep = stationNames.length > 1 ? (height - top - bottom) / (stationNames.length - 1) : 0;
 
   const entries = state.timetable
-    .map(row => ({ ...row, minute: toMinutes(row.depart || row.arrive) }))
+    .map(row => {
+      const normalized = normalizeTimetableRow(row);
+      return { ...normalized, minute: toMinutes(normalized.depart || normalized.arrive) };
+    })
+    .filter(row => row.operation !== '運行なし')
     .filter(row => row.trainNo && row.station && row.minute !== null)
     .sort((a, b) => a.minute - b.minute);
 
@@ -213,9 +245,47 @@ function refreshDiagram() {
 function serializeOud2(data) {
   const header = ['# CloudDiaSecond OUD2', '[Railway]', `Name=${data.railway.name}`, `Number=${data.railway.number}`];
   const trainTypes = ['[TrainTypes]', ...data.railway.trainTypes.map(t => [t.name, t.code, t.category].join('|'))];
-  const stations = ['[Stations]', ...data.stations.map(s => [s.name, s.code].join('|'))];
-  const timetable = ['[Timetable]', ...data.timetable.map(r => [r.trainNo, r.type, r.station, r.arrive, r.depart].join('|'))];
+  const stations = ['[Stations]', ...data.stations.map(s => [s.name, s.code, s.track].join('|'))];
+  const timetable = ['[Timetable]', ...data.timetable.map(r => [r.trainNo, r.type, r.station, r.arrive, r.depart, r.operation].join('|'))];
   return [...header, ...trainTypes, ...stations, ...timetable].join('\n');
+}
+
+function normalizeStation(station = {}) {
+  return {
+    name: station.name ?? '',
+    code: station.code ?? '',
+    track: station.track ?? '',
+  };
+}
+
+function normalizeTimetableRow(row = {}) {
+  const operation = TRAIN_OPERATIONS.includes(row.operation) ? row.operation : DEFAULT_TRAIN_OPERATION;
+  return {
+    trainNo: row.trainNo ?? '',
+    type: row.type ?? '',
+    station: row.station ?? '',
+    arrive: row.arrive ?? '',
+    depart: row.depart ?? '',
+    operation,
+  };
+}
+
+function normalizeState(inputState) {
+  return {
+    railway: {
+      name: inputState.railway?.name ?? '',
+      number: inputState.railway?.number ?? '',
+      trainTypes: Array.isArray(inputState.railway?.trainTypes)
+        ? inputState.railway.trainTypes.map(type => ({
+          name: type.name ?? '',
+          code: type.code ?? '',
+          category: type.category ?? '',
+        }))
+        : [],
+    },
+    stations: Array.isArray(inputState.stations) ? inputState.stations.map(normalizeStation) : [],
+    timetable: Array.isArray(inputState.timetable) ? inputState.timetable.map(normalizeTimetableRow) : [],
+  };
 }
 
 function parseOud2(text) {
@@ -225,7 +295,7 @@ function parseOud2(text) {
   if (trimmed.startsWith('{')) {
     const parsed = JSON.parse(trimmed);
     if (parsed.railway && parsed.stations && parsed.timetable) {
-      Object.assign(state, parsed);
+      Object.assign(state, normalizeState(parsed));
       return;
     }
   }
@@ -255,15 +325,15 @@ function parseOud2(text) {
       const [name = '', code = '', category = ''] = line.split('|');
       if (name || code || category) next.railway.trainTypes.push({ name, code, category });
     } else if (section === 'Stations') {
-      const [name = '', code = ''] = line.split('|');
-      if (name || code) next.stations.push({ name, code });
+      const [name = '', code = '', track = ''] = line.split('|');
+      if (name || code) next.stations.push({ name, code, track });
     } else if (section === 'Timetable') {
-      const [trainNo = '', type = '', station = '', arrive = '', depart = ''] = line.split('|');
-      if (trainNo || station) next.timetable.push({ trainNo, type, station, arrive, depart });
+      const [trainNo = '', type = '', station = '', arrive = '', depart = '', operation = DEFAULT_TRAIN_OPERATION] = line.split('|');
+      if (trainNo || station) next.timetable.push({ trainNo, type, station, arrive, depart, operation });
     }
   });
 
-  Object.assign(state, next);
+  Object.assign(state, normalizeState(next));
 }
 
 function renderAll() {
@@ -284,12 +354,12 @@ document.getElementById('addTrainType').addEventListener('click', () => {
 });
 
 document.getElementById('addStation').addEventListener('click', () => {
-  state.stations.push({ name: '', code: '' });
+  state.stations.push({ name: '', code: '', track: '' });
   renderAll();
 });
 
 document.getElementById('addTimetable').addEventListener('click', () => {
-  state.timetable.push({ trainNo: '', type: '', station: '', arrive: '', depart: '' });
+  state.timetable.push({ trainNo: '', type: '', station: '', arrive: '', depart: '', operation: DEFAULT_TRAIN_OPERATION });
   renderAll();
 });
 
