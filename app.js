@@ -30,15 +30,6 @@ const els = {
   fileInput: document.getElementById('fileInput'),
 };
 
-function removeRowButton(onClick) {
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'remove';
-  btn.textContent = '削除';
-  btn.addEventListener('click', onClick);
-  return btn;
-}
-
 function inputCell(value, onInput) {
   const input = document.createElement('input');
   input.value = value ?? '';
@@ -88,13 +79,6 @@ function renderRailway() {
       const index = findIndex();
       if (index >= 0) state.railway.trainTypes[index].category = value;
     }));
-    const td = document.createElement('td');
-    td.append(removeRowButton(() => {
-      const index = findIndex();
-      if (index >= 0) state.railway.trainTypes.splice(index, 1);
-      renderAll();
-    }));
-    tr.append(td);
     els.trainTypesTable.append(tr);
   });
 }
@@ -116,13 +100,6 @@ function renderStations() {
       const index = findIndex();
       if (index >= 0) state.stations[index].track = value;
     }));
-    const td = document.createElement('td');
-    td.append(removeRowButton(() => {
-      const index = findIndex();
-      if (index >= 0) state.stations.splice(index, 1);
-      renderAll();
-    }));
-    tr.append(td);
     els.stationsTable.append(tr);
   });
 }
@@ -156,13 +133,6 @@ function renderTimetable() {
       const index = findIndex();
       if (index >= 0) state.timetable[index].operation = value;
     }));
-    const td = document.createElement('td');
-    td.append(removeRowButton(() => {
-      const index = findIndex();
-      if (index >= 0) state.timetable.splice(index, 1);
-      renderAll();
-    }));
-    tr.append(td);
     els.timetableTable.append(tr);
   });
 }
@@ -392,6 +362,25 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   link.download = `${sanitizeFilename(state.railway.name)}.oud2`;
   link.click();
   URL.revokeObjectURL(url);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'D' || !e.shiftKey) return;
+  const tr = e.target.closest('tr');
+  if (!tr) return;
+  const tbody = tr.parentElement;
+  const rowIndex = Array.from(tbody.rows).indexOf(tr);
+  if (rowIndex < 0) return;
+  if (tbody === els.trainTypesTable) {
+    state.railway.trainTypes.splice(rowIndex, 1);
+  } else if (tbody === els.stationsTable) {
+    state.stations.splice(rowIndex, 1);
+  } else if (tbody === els.timetableTable) {
+    state.timetable.splice(rowIndex, 1);
+  } else {
+    return;
+  }
+  renderAll();
 });
 
 renderAll();
