@@ -199,7 +199,7 @@ function buildTrainMap(inputState, diagrams) {
     inputState.trains.map(normalizeTrain).forEach(train => {
       addTrain(train.trainNo, train.type);
       const target = map.get(train.trainNo);
-      target.settings = train.settings;
+      if (target) target.settings = train.settings;
     });
   }
 
