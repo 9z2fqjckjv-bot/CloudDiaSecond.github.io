@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CloudDiaSecond</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>CloudDiaSecond</h1>
+      <p>表形式でダイヤグラム・駅時刻表・路線設定を編集できるWebツール</p>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h2>路線設定</h2>
+        <div class="field-row">
+          <label>路線名 <input id="railwayName" type="text" /></label>
+          <label>路線号 <input id="railwayNumber" type="text" /></label>
+        </div>
+        <h3>種別</h3>
+        <table id="trainTypesTable">
+          <thead>
+            <tr><th>名称</th><th>略号</th><th>種別</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button id="addTrainType" type="button">種別を追加</button>
+      </section>
+
+      <section class="panel">
+        <h2>駅設定</h2>
+        <table id="stationsTable">
+          <thead>
+            <tr><th>駅名</th><th>駅コード</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button id="addStation" type="button">駅を追加</button>
+      </section>
+
+      <section class="panel">
+        <h2>駅時刻表</h2>
+        <table id="timetableTable">
+          <thead>
+            <tr><th>列車番号</th><th>種別</th><th>駅名</th><th>着</th><th>発</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button id="addTimetable" type="button">行を追加</button>
+      </section>
+
+      <section class="panel">
+        <h2>ダイヤグラム</h2>
+        <svg id="diagram" viewBox="0 0 900 400" role="img" aria-label="動的に更新されるダイヤグラム図"></svg>
+      </section>
+
+      <section class="panel">
+        <h2>.oud2 インポート / エクスポート</h2>
+        <div class="field-row">
+          <input id="fileInput" type="file" accept=".oud2" />
+          <button id="importBtn" type="button">インポート</button>
+          <button id="exportBtn" type="button">エクスポート</button>
+        </div>
+        <textarea id="rawText" rows="8" placeholder=".oud2テキストを直接編集できます"></textarea>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
