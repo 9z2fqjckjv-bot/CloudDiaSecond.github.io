@@ -139,7 +139,8 @@ function renderTimetable() {
 function toMinutes(value) {
   if (!/^\d{1,2}:\d{2}$/.test(value || '')) return null;
   const [h, m] = value.split(':').map(Number);
-  if (h < 0 || h > 29 || m < 0 || m > 59) return null;
+  // 鉄道ダイヤでは日跨ぎ運転を想定し 29:59 までを許容
+  if (h < 0 || h > 29 || m < 0 || m >= 60) return null;
   return h * 60 + m;
 }
 
@@ -187,7 +188,7 @@ function refreshDiagram() {
       .map(point => {
         const x = left + ((point.minute - minTime) / span) * (width - left - right);
         const y = top + stationNames.indexOf(point.station) * yStep;
-        if (!Number.isFinite(x) || !Number.isFinite(y) || y < 0) return null;
+        if (!Number.isFinite(x) || !Number.isFinite(y) || x < left || x > width - right || y < top || y > height - bottom) return null;
         return `${x},${y}`;
       })
       .filter(Boolean)
@@ -215,7 +216,7 @@ function serializeOud2(data) {
 
 function parseOud2(text) {
   const trimmed = text.trim();
-  if (!trimmed) throw new Error('Input text is empty');
+  if (!trimmed) throw new Error('Input text is empty. Please provide valid .oud2 content or select a file.');
 
   if (trimmed.startsWith('{')) {
     const parsed = JSON.parse(trimmed);
@@ -241,7 +242,8 @@ function parseOud2(text) {
     }
 
     if (section === 'Railway') {
-      const [key, ...rest] = line.split('=');
+      const [rawKey, ...rest] = line.split('=');
+      const key = rawKey.trim();
       const value = rest.join('=').trim();
       if (key === 'Name') next.railway.name = value;
       if (key === 'Number') next.railway.number = value;
@@ -309,10 +311,8 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   const url = URL.createObjectURL(blob);
   link.href = url;
   link.download = `${state.railway.name || 'diagram'}.oud2`;
-  link.addEventListener('click', () => {
-    setTimeout(() => URL.revokeObjectURL(url), 100);
-  }, { once: true });
   link.click();
+  URL.revokeObjectURL(url);
 });
 
 renderAll();
